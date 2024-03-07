@@ -12,8 +12,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    private SensorManager sensorManager;
-    private Sensor lightSensor;
+    private SensorManager administradorSensores;
+    private Sensor sensorLuz;
     private TextView textView;
     private View layout;
 
@@ -26,33 +26,42 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         layout = findViewById(R.id.layout);
 
-        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+        administradorSensores = (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensorLuz = administradorSensores.getDefaultSensor(Sensor.TYPE_LIGHT);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        sensorManager.registerListener(this, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        administradorSensores.registerListener(this, sensorLuz, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        sensorManager.unregisterListener(this);
+        administradorSensores.unregisterListener(this);
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
-            if (event.values[0] > 20) {
-                textView.setText("Hay luz en el entorno");
-                layout.setBackgroundColor(Color.WHITE);
-            } else {
-                textView.setText("No hay mucha luz en el entorno");
-                layout.setBackgroundColor(Color.BLACK);
+            float intensidadLuz = event.values[0];
+            if(intensidadLuz>=20){
+               layout.setBackgroundColor(Color.WHITE);
+            }else{
+                int escalaRgbLuz = (int) Math.ceil(255*(intensidadLuz/20f));
+                layout.setBackgroundColor(Color.rgb(escalaRgbLuz,escalaRgbLuz,escalaRgbLuz));
             }
+            textView.setText(mensajeIntensidadLuz(intensidadLuz));
         }
+    }
+
+    private String mensajeIntensidadLuz(float intensidadLuz){
+        return
+                intensidadLuz >= 20 ? "Hay mucha luz en el entorno" :
+                intensidadLuz >= 15 ? "Hay suficiente luz en el entorno" :
+                intensidadLuz >= 10 ? "Hay luz regular en el entorno" :
+                intensidadLuz >= 5 ? "Hay poquita luz en el entorno" : "No hay luz en el entorno";
     }
 
     @Override
